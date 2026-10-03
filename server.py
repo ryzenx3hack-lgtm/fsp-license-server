@@ -8,6 +8,12 @@ app = Flask(__name__)
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
+# ================= APP VERSION & AUTO-UPDATER CONFIG =================
+CURRENT_APP_VERSION = "1.0.0"
+# Jab bhi GitHub Releases par naya EXE upload karein, uska direct link yahan adjust ho sakta hai
+LATEST_EXE_DOWNLOAD_URL = "https://github.com/ryzenx3hack-lgtm/fsp-license-server/releases/latest/download/FirmwareStudioPro.exe"
+# ======================================================================
+
 def get_db():
     if DATABASE_URL:
         import psycopg2
@@ -190,7 +196,7 @@ HTML_DASHBOARD = """
         table { 
             width: 100%; 
             border-collapse: collapse; 
-            min-width: 780px; /* guarantees elements don't get squished on phones */
+            min-width: 780px;
             background: #0d121f;
         }
         th, td { 
@@ -401,7 +407,7 @@ HTML_DASHBOARD = """
                         <td>
                             <div class="key-wrapper">
                                 <span class="key-text">{{ row[0] }}</span>
-                                <button class="btn-copy" onclick="copyKey('{{ row[0] }}', this)">📋 Copy</button>
+                                <button class="btn-copy" onclick="copyKey('${row[0]}', this)">📋 Copy</button>
                             </div>
                         </td>
                         <td><b>{{ row[4] }}</b> Days</td>
@@ -440,6 +446,15 @@ def dashboard():
     cur.close()
     conn.close()
     return render_template_string(HTML_DASHBOARD, rows=rows)
+
+# AUTO-UPDATER VERSION CHECK ENDPOINT
+@app.route("/api/check-update")
+def check_update():
+    return jsonify({
+        "latest_version": CURRENT_APP_VERSION,
+        "download_url": LATEST_EXE_DOWNLOAD_URL,
+        "changelog": "Performance improvements and patch stability."
+    })
 
 @app.route("/api/keys-data")
 def keys_data():
