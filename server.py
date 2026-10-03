@@ -9,7 +9,7 @@ app = Flask(__name__)
 # Session security ke liye secret key
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "fsp_super_secret_shield_key_9988")
 
-DATABASE_URL = os.environ.get("DATABASE_URL")[cite: 1]
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
 # ================= ADMIN DASHBOARD PASSWORD =================
 # Password Render ke Environment Variables se aayega, GitHub par nazar nahi aayega
@@ -21,22 +21,22 @@ CURRENT_APP_VERSION = "1.0.0"
 LATEST_EXE_DOWNLOAD_URL = "https://github.com/ryzenx3hack-lgtm/fsp-license-server/releases/latest/download/FirmwareStudioPro.exe"
 # ======================================================================
 
-def get_db():[cite: 1]
-    if DATABASE_URL:[cite: 1]
-        import psycopg2[cite: 1]
-        db_url = DATABASE_URL[cite: 1]
-        if db_url.startswith("postgres://"):[cite: 1]
-            db_url = db_url.replace("postgres://", "postgresql://", 1)[cite: 1]
-        conn = psycopg2.connect(db_url)[cite: 1]
-        return conn, "postgres"[cite: 1]
+def get_db():
+    if DATABASE_URL:
+        import psycopg2
+        db_url = DATABASE_URL
+        if db_url.startswith("postgres://"):
+            db_url = db_url.replace("postgres://", "postgresql://", 1)
+        conn = psycopg2.connect(db_url)
+        return conn, "postgres"
     else:
-        conn = sqlite3.connect("licenses_persistent.db")[cite: 1]
-        return conn, "sqlite"[cite: 1]
+        conn = sqlite3.connect("licenses_persistent.db")
+        return conn, "sqlite"
 
-def init_db():[cite: 1]
-    conn, db_type = get_db()[cite: 1]
-    cur = conn.cursor()[cite: 1]
-    if db_type == "postgres":[cite: 1]
+def init_db():
+    conn, db_type = get_db()
+    cur = conn.cursor()
+    if db_type == "postgres":
         cur.execute('''
             CREATE TABLE IF NOT EXISTS licenses (
                 key TEXT PRIMARY KEY,
@@ -48,9 +48,9 @@ def init_db():[cite: 1]
                 activated_at TIMESTAMP,
                 is_active BOOLEAN DEFAULT TRUE
             );
-        ''')[cite: 1]
-        cur.execute("ALTER TABLE licenses ADD COLUMN IF NOT EXISTS pc_name TEXT DEFAULT '';")[cite: 1]
-        cur.execute("ALTER TABLE licenses ADD COLUMN IF NOT EXISTS os_info TEXT DEFAULT '';")[cite: 1]
+        ''')
+        cur.execute("ALTER TABLE licenses ADD COLUMN IF NOT EXISTS pc_name TEXT DEFAULT '';")
+        cur.execute("ALTER TABLE licenses ADD COLUMN IF NOT EXISTS os_info TEXT DEFAULT '';")
     else:
         cur.execute('''
             CREATE TABLE IF NOT EXISTS licenses (
@@ -63,23 +63,23 @@ def init_db():[cite: 1]
                 activated_at TEXT,
                 is_active INTEGER DEFAULT 1
             );
-        ''')[cite: 1]
-        try:[cite: 1]
-            cur.execute("ALTER TABLE licenses ADD COLUMN pc_name TEXT DEFAULT ''")[cite: 1]
-        except Exception:[cite: 1]
-            pass[cite: 1]
-        try:[cite: 1]
-            cur.execute("ALTER TABLE licenses ADD COLUMN os_info TEXT DEFAULT ''")[cite: 1]
-        except Exception:[cite: 1]
-            pass[cite: 1]
-    conn.commit()[cite: 1]
-    cur.close()[cite: 1]
-    conn.close()[cite: 1]
+        ''')
+        try:
+            cur.execute("ALTER TABLE licenses ADD COLUMN pc_name TEXT DEFAULT ''")
+        except Exception:
+            pass
+        try:
+            cur.execute("ALTER TABLE licenses ADD COLUMN os_info TEXT DEFAULT ''")
+        except Exception:
+            pass
+    conn.commit()
+    cur.close()
+    conn.close()
 
-try:[cite: 1]
-    init_db()[cite: 1]
-except Exception as e:[cite: 1]
-    print(f"DB Init Warning: {e}")[cite: 1]
+try:
+    init_db()
+except Exception as e:
+    print(f"DB Init Warning: {e}")
 
 # Admin Login Protection Decorator
 def login_required(f):
@@ -599,87 +599,86 @@ def admin_logout():
 @app.route("/")
 @login_required
 def dashboard():
-    conn, db_type = get_db()[cite: 1]
-    cur = conn.cursor()[cite: 1]
-    cur.execute("SELECT key, hwid, pc_name, os_info, days_valid, created_at, activated_at, is_active FROM licenses ORDER BY created_at DESC")[cite: 1]
-    rows = cur.fetchall()[cite: 1]
-    cur.close()[cite: 1]
-    conn.close()[cite: 1]
-    return render_template_string(HTML_DASHBOARD, rows=rows)[cite: 1]
+    conn, db_type = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT key, hwid, pc_name, os_info, days_valid, created_at, activated_at, is_active FROM licenses ORDER BY created_at DESC")
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return render_template_string(HTML_DASHBOARD, rows=rows)
 
 @app.route("/api/keys-data")
 def keys_data():
-    # Only return keys list if admin session is active
     if not session.get("is_admin_authenticated"):
         return jsonify({"error": "Unauthorized"}), 401
 
-    conn, db_type = get_db()[cite: 1]
-    cur = conn.cursor()[cite: 1]
-    cur.execute("SELECT key, hwid, pc_name, os_info, days_valid, created_at, activated_at, is_active FROM licenses ORDER BY created_at DESC")[cite: 1]
-    rows = cur.fetchall()[cite: 1]
-    cur.close()[cite: 1]
-    conn.close()[cite: 1]
+    conn, db_type = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT key, hwid, pc_name, os_info, days_valid, created_at, activated_at, is_active FROM licenses ORDER BY created_at DESC")
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
     
-    data = [][cite: 1]
-    for r in rows:[cite: 1]
-        data.append({[cite: 1]
-            "key": r[0],[cite: 1]
-            "hwid": r[1] or "",[cite: 1]
-            "pc_name": r[2] or "",[cite: 1]
-            "os_info": r[3] or "",[cite: 1]
-            "days_valid": r[4],[cite: 1]
-            "is_active": bool(r[7])[cite: 1]
+    data = []
+    for r in rows:
+        data.append({
+            "key": r[0],
+            "hwid": r[1] or "",
+            "pc_name": r[2] or "",
+            "os_info": r[3] or "",
+            "days_valid": r[4],
+            "is_active": bool(r[7])
         })
-    return jsonify(data)[cite: 1]
+    return jsonify(data)
 
 @app.route("/create", methods=["POST"])
 @login_required
 def create_key():
-    days = int(request.form.get("days", 30))[cite: 1]
-    raw_token = secrets.token_hex(8).upper()[cite: 1]
-    key = f"FSP-{raw_token[:4]}-{raw_token[4:8]}-{raw_token[8:12]}-{raw_token[12:]}"[cite: 1]
-    now = datetime.utcnow()[cite: 1]
+    days = int(request.form.get("days", 30))
+    raw_token = secrets.token_hex(8).upper()
+    key = f"FSP-{raw_token[:4]}-{raw_token[4:8]}-{raw_token[8:12]}-{raw_token[12:]}"
+    now = datetime.utcnow()
     
-    conn, db_type = get_db()[cite: 1]
-    cur = conn.cursor()[cite: 1]
-    if db_type == "postgres":[cite: 1]
-        cur.execute("INSERT INTO licenses (key, days_valid, created_at, is_active) VALUES (%s, %s, %s, %s)",[cite: 1]
-                    (key, days, now, True))[cite: 1]
+    conn, db_type = get_db()
+    cur = conn.cursor()
+    if db_type == "postgres":
+        cur.execute("INSERT INTO licenses (key, days_valid, created_at, is_active) VALUES (%s, %s, %s, %s)",
+                    (key, days, now, True))
     else:
-        cur.execute("INSERT INTO licenses (key, days_valid, created_at, is_active) VALUES (?, ?, ?, 1)",[cite: 1]
-                    (key, days, now.isoformat()))[cite: 1]
-    conn.commit()[cite: 1]
-    cur.close()[cite: 1]
-    conn.close()[cite: 1]
-    return redirect(url_for('dashboard'))[cite: 1]
+        cur.execute("INSERT INTO licenses (key, days_valid, created_at, is_active) VALUES (?, ?, ?, 1)",
+                    (key, days, now.isoformat()))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return redirect(url_for('dashboard'))
 
 @app.route("/toggle/<key>")
 @login_required
 def toggle_status(key):
-    conn, db_type = get_db()[cite: 1]
-    cur = conn.cursor()[cite: 1]
-    if db_type == "postgres":[cite: 1]
-        cur.execute("UPDATE licenses SET is_active = NOT is_active WHERE key = %s", (key,))[cite: 1]
+    conn, db_type = get_db()
+    cur = conn.cursor()
+    if db_type == "postgres":
+        cur.execute("UPDATE licenses SET is_active = NOT is_active WHERE key = %s", (key,))
     else:
-        cur.execute("UPDATE licenses SET is_active = CASE WHEN is_active=1 THEN 0 ELSE 1 END WHERE key = ?", (key,))[cite: 1]
-    conn.commit()[cite: 1]
-    cur.close()[cite: 1]
-    conn.close()[cite: 1]
-    return redirect(url_for('dashboard'))[cite: 1]
+        cur.execute("UPDATE licenses SET is_active = CASE WHEN is_active=1 THEN 0 ELSE 1 END WHERE key = ?", (key,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return redirect(url_for('dashboard'))
 
 @app.route("/delete/<key>")
 @login_required
 def delete_key(key):
-    conn, db_type = get_db()[cite: 1]
-    cur = conn.cursor()[cite: 1]
-    if db_type == "postgres":[cite: 1]
-        cur.execute("DELETE FROM licenses WHERE key = %s", (key,))[cite: 1]
+    conn, db_type = get_db()
+    cur = conn.cursor()
+    if db_type == "postgres":
+        cur.execute("DELETE FROM licenses WHERE key = %s", (key,))
     else:
-        cur.execute("DELETE FROM licenses WHERE key = ?", (key,))[cite: 1]
-    conn.commit()[cite: 1]
-    cur.close()[cite: 1]
-    conn.close()[cite: 1]
-    return redirect(url_for('dashboard'))[cite: 1]
+        cur.execute("DELETE FROM licenses WHERE key = ?", (key,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return redirect(url_for('dashboard'))
 
 # ================= PUBLIC CLIENT APIS (NO LOGIN REQUIRED) =================
 @app.route("/api/check-update")
@@ -692,83 +691,83 @@ def check_update():
 
 @app.route("/api/verify-license", methods=["POST"])
 def verify_license():
-    data = request.get_json(force=True, silent=True) or {}[cite: 1]
-    key = data.get("key", "").strip()[cite: 1]
-    client_hwid = data.get("hwid", "").strip()[cite: 1]
-    pc_name = data.get("pc_name", "").strip()[cite: 1]
-    os_info = data.get("os_info", "").strip()[cite: 1]
+    data = request.get_json(force=True, silent=True) or {}
+    key = data.get("key", "").strip()
+    client_hwid = data.get("hwid", "").strip()
+    pc_name = data.get("pc_name", "").strip()
+    os_info = data.get("os_info", "").strip()
 
-    if not key or not client_hwid:[cite: 1]
-        return jsonify({"valid": False, "message": "Invalid verification payload."}), 400[cite: 1]
+    if not key or not client_hwid:
+        return jsonify({"valid": False, "message": "Invalid verification payload."}), 400
 
-    conn, db_type = get_db()[cite: 1]
-    cur = conn.cursor()[cite: 1]
-    if db_type == "postgres":[cite: 1]
-        cur.execute("SELECT hwid, days_valid, activated_at, is_active FROM licenses WHERE key = %s", (key,))[cite: 1]
+    conn, db_type = get_db()
+    cur = conn.cursor()
+    if db_type == "postgres":
+        cur.execute("SELECT hwid, days_valid, activated_at, is_active FROM licenses WHERE key = %s", (key,))
     else:
-        cur.execute("SELECT hwid, days_valid, activated_at, is_active FROM licenses WHERE key = ?", (key,))[cite: 1]
+        cur.execute("SELECT hwid, days_valid, activated_at, is_active FROM licenses WHERE key = ?", (key,))
     
-    row = cur.fetchone()[cite: 1]
-    if not row:[cite: 1]
-        cur.close()[cite: 1]
-        conn.close()[cite: 1]
-        return jsonify({"valid": False, "message": "License key not found in system."}), 404[cite: 1]
+    row = cur.fetchone()
+    if not row:
+        cur.close()
+        conn.close()
+        return jsonify({"valid": False, "message": "License key not found in system."}), 404
 
-    bound_hwid, days_valid, activated_at, is_active = row[cite: 1]
+    bound_hwid, days_valid, activated_at, is_active = row
 
-    if not is_active:[cite: 1]
-        cur.close()[cite: 1]
-        conn.close()[cite: 1]
-        return jsonify({"valid": False, "message": "License has been deactivated by administrator."}), 403[cite: 1]
+    if not is_active:
+        cur.close()
+        conn.close()
+        return jsonify({"valid": False, "message": "License has been deactivated by administrator."}), 403
 
-    now = datetime.utcnow()[cite: 1]
+    now = datetime.utcnow()
 
-    if not bound_hwid:[cite: 1]
-        bound_hwid = client_hwid[cite: 1]
-        activated_at = now[cite: 1]
-        if db_type == "postgres":[cite: 1]
+    if not bound_hwid:
+        bound_hwid = client_hwid
+        activated_at = now
+        if db_type == "postgres":
             cur.execute("""
                 UPDATE licenses 
                 SET hwid = %s, pc_name = %s, os_info = %s, activated_at = %s 
                 WHERE key = %s
-            """, (client_hwid, pc_name, os_info, now, key))[cite: 1]
+            """, (client_hwid, pc_name, os_info, now, key))
         else:
             cur.execute("""
                 UPDATE licenses 
                 SET hwid = ?, pc_name = ?, os_info = ?, activated_at = ? 
                 WHERE key = ?
-            """, (client_hwid, pc_name, os_info, now.isoformat(), key))[cite: 1]
-        conn.commit()[cite: 1]
+            """, (client_hwid, pc_name, os_info, now.isoformat(), key))
+        conn.commit()
     else:
-        if db_type == "postgres":[cite: 1]
-            cur.execute("UPDATE licenses SET pc_name = COALESCE(NULLIF(pc_name, ''), %s), os_info = COALESCE(NULLIF(os_info, ''), %s) WHERE key = %s", (pc_name, os_info, key))[cite: 1]
+        if db_type == "postgres":
+            cur.execute("UPDATE licenses SET pc_name = COALESCE(NULLIF(pc_name, ''), %s), os_info = COALESCE(NULLIF(os_info, ''), %s) WHERE key = %s", (pc_name, os_info, key))
         else:
-            cur.execute("UPDATE licenses SET pc_name = CASE WHEN pc_name='' THEN ? ELSE pc_name END, os_info = CASE WHEN os_info='' THEN ? ELSE os_info END WHERE key = ?", (pc_name, os_info, key))[cite: 1]
-        conn.commit()[cite: 1]
+            cur.execute("UPDATE licenses SET pc_name = CASE WHEN pc_name='' THEN ? ELSE pc_name END, os_info = CASE WHEN os_info='' THEN ? ELSE os_info END WHERE key = ?", (pc_name, os_info, key))
+        conn.commit()
 
-    if bound_hwid != client_hwid:[cite: 1]
-        cur.close()[cite: 1]
-        conn.close()[cite: 1]
-        return jsonify({"valid": False, "message": "License is locked to a different computer!"}), 403[cite: 1]
+    if bound_hwid != client_hwid:
+        cur.close()
+        conn.close()
+        return jsonify({"valid": False, "message": "License is locked to a different computer!"}), 403
 
-    if isinstance(activated_at, str):[cite: 1]
-        activated_at = datetime.fromisoformat(activated_at)[cite: 1]
+    if isinstance(activated_at, str):
+        activated_at = datetime.fromisoformat(activated_at)
     
-    expiry_date = activated_at + timedelta(days=days_valid)[cite: 1]
-    days_left = max(0, (expiry_date - now).days)[cite: 1]
+    expiry_date = activated_at + timedelta(days=days_valid)
+    days_left = max(0, (expiry_date - now).days)
 
-    if now > expiry_date:[cite: 1]
-        cur.close()[cite: 1]
-        conn.close()[cite: 1]
-        return jsonify({"valid": False, "message": "License subscription has expired."}), 403[cite: 1]
+    if now > expiry_date:
+        cur.close()
+        conn.close()
+        return jsonify({"valid": False, "message": "License subscription has expired."}), 403
 
-    cur.close()[cite: 1]
-    conn.close()[cite: 1]
-    return jsonify({[cite: 1]
-        "valid": True,[cite: 1]
-        "message": "License is valid and verified.",[cite: 1]
-        "days_left": days_left[cite: 1]
-    }), 200[cite: 1]
+    cur.close()
+    conn.close()
+    return jsonify({
+        "valid": True,
+        "message": "License is valid and verified.",
+        "days_left": days_left
+    }), 200
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)[cite: 1]
+    app.run(host="0.0.0.0", port=5000)
