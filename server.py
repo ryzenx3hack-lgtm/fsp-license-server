@@ -12,7 +12,7 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY", "fsp_super_secret_shield_key
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 # ================= ADMIN DASHBOARD PASSWORD =================
-# Password Render ke Environment Variables se aayega, GitHub par nazar nahi aayega
+# Password Render ke Environment Variables
 ADMIN_DASHBOARD_PASSWORD = os.environ.get("ADMIN_PASSWORD", "shan@786")
 # =============================================================
 
